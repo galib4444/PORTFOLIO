@@ -1,26 +1,180 @@
 @import "tailwindcss";
 
+/* ===== MAGNETTO DESIGN SYSTEM ===== */
+
+/* Light Mode (Default) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Backgrounds */
+  --bg-primary: #f5f5f5;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e8e8e8;
+
+  /* Text */
+  --text-primary: #0a0a0a;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  /* Accents */
+  --accent-red: #ff3b3b;
+  --accent-green: #00c853;
+  --accent-blue: #2962ff;
+  --accent-orange: #ff6b35;
+
+  /* Glass Effects (Light) */
+  --glass-bg: rgba(0, 0, 0, 0.05);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-blur: 20px;
+
+  /* Dock specific */
+  --dock-bg: rgba(60, 60, 60, 0.85);
+  --dock-text: #ffffff;
+  --dock-button-bg: #ffffff;
+  --dock-button-text: #0a0a0a;
+
+  /* Gradients */
+  --gradient-rgb: linear-gradient(90deg, var(--accent-red), var(--accent-green), var(--accent-blue));
+  --gradient-warm: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+
+  /* Spacing (8px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
 }
 
+/* Dark Mode */
+[data-theme="dark"],
+.dark {
+  --bg-primary: #050505;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #111111;
+
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+
+  --dock-bg: rgba(255, 255, 255, 0.1);
+  --dock-text: #ffffff;
+  --dock-button-bg: #ffffff;
+  --dock-button-text: #0a0a0a;
+}
+
+/* Tailwind v4 Theme Integration */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-muted: var(--text-muted);
+  --color-secondary: var(--text-secondary);
+
+  /* Custom colors */
+  --color-accent-red: var(--accent-red);
+  --color-accent-green: var(--accent-green);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-orange: var(--accent-orange);
+
+  /* Fonts */
+  --font-pixel: var(--font-rubik-pixels);
+  --font-mono: var(--font-space-mono);
+
+  /* Custom breakpoints */
+  --breakpoint-xs: 375px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-space-mono), ui-monospace, monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Glass Utilities */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+}
+
+.glass-dock {
+  background: var(--dock-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Pixel Font Class */
+.font-pixel {
+  font-family: var(--font-rubik-pixels), cursive;
+}
+
+/* Smooth Scroll Behavior */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Selection Styling */
+::selection {
+  background: var(--accent-orange);
+  color: var(--bg-primary);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Focus Styles for Accessibility */
+:focus-visible {
+  outline: 2px solid var(--accent-orange);
+  outline-offset: 2px;
+}
+
+/* Skip Link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent-orange);
+  color: var(--bg-primary);
+  padding: 8px 16px;
+  z-index: 100;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 0;
 }
