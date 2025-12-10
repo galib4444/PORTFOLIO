@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Copy, Check, Mail, MapPin, Phone, Linkedin, Github } from "lucide-react";
+import { Copy, Check, Mail, Linkedin, Github } from "lucide-react";
 import { contactInfo } from "@/data/stats";
 
 export function ContactSection() {
@@ -78,30 +78,6 @@ export function ContactSection() {
               Email copied to clipboard!
             </motion.p>
           )}
-        </motion.div>
-
-        {/* Contact Info Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.3 }}
-          className="grid sm:grid-cols-2 gap-4 mb-12 max-w-lg mx-auto"
-        >
-          <a
-            href={`tel:${contactInfo.phone}`}
-            className="flex items-center gap-3 px-5 py-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--glass-border)] hover:border-[var(--accent-orange)] transition-colors"
-          >
-            <Phone size={18} className="text-[var(--accent-orange)]" />
-            <span className="font-mono text-sm text-[var(--text-secondary)]">
-              {contactInfo.phone}
-            </span>
-          </a>
-          <div className="flex items-center gap-3 px-5 py-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--glass-border)]">
-            <MapPin size={18} className="text-[var(--accent-orange)]" />
-            <span className="font-mono text-sm text-[var(--text-secondary)]">
-              {contactInfo.location}
-            </span>
-          </div>
         </motion.div>
 
         {/* Social Links */}

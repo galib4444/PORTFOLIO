@@ -1,45 +1,58 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LiquidPortrait } from "@/components/webgl/LiquidPortrait";
+import Image from "next/image";
+import { FluidOverlay } from "@/components/webgl/FluidOverlay";
 import { fadeInUp, slideInLeft, slideInRight } from "@/lib/animations";
 
 export function HeroSection() {
   return (
     <section
       id="home"
-      className="min-h-screen flex items-center justify-center px-4 md:px-8 lg:px-16 py-20"
+      className="min-h-screen relative p-4 md:p-6 lg:p-8"
     >
-      <div className="max-w-7xl w-full">
-        {/* Desktop: 3-column layout */}
-        <div className="hidden lg:grid lg:grid-cols-3 lg:gap-8 lg:items-center">
-          {/* Left: Name & Title */}
+      {/* Large rounded container */}
+      <div className="w-full h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] bg-[#e8e8e8] rounded-[2rem] md:rounded-[3rem] lg:rounded-[4rem] relative overflow-hidden">
+
+        {/* Fluid Distortion Overlay - covers entire container */}
+        <FluidOverlay />
+
+        {/* Desktop Layout */}
+        <div className="hidden lg:flex h-full items-center justify-between px-8 xl:px-16 2xl:px-24 relative z-10 pointer-events-none">
+          {/* Left: Name & Subtitle */}
           <motion.div
             variants={slideInLeft}
             initial="hidden"
             animate="visible"
-            className="space-y-4"
+            className="flex-shrink-0"
           >
-            <h1 className="font-pixel text-6xl xl:text-7xl 2xl:text-8xl leading-[0.9] tracking-tight text-[var(--text-primary)]">
+            <h1 className="font-pixel text-5xl xl:text-6xl 2xl:text-7xl leading-[0.95] tracking-tight text-[#1a1a1a]">
               GALIB
               <br />
               MUKTASIN
             </h1>
-            <p className="text-sm font-mono tracking-[0.2em] text-[var(--text-secondary)] uppercase">
+            <p className="mt-6 text-xs xl:text-sm font-mono tracking-[0.25em] text-[#666] uppercase">
               Engineer · Consultant · Designer
             </p>
           </motion.div>
 
-          {/* Center: Portrait */}
+          {/* Center: Portrait Image */}
           <motion.div
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
-            transition={{ delay: 0.2 }}
-            className="flex justify-center"
+            className="absolute left-1/2 -translate-x-1/2 top-0 h-full flex items-end justify-center pb-8"
+            style={{ width: "45%", maxWidth: "550px" }}
           >
-            <div className="w-full max-w-md aspect-[3/4] relative">
-              <LiquidPortrait />
+            <div className="w-full h-[90%] relative">
+              <Image
+                src="/images/portrait.png"
+                alt="Galib Muktasin"
+                fill
+                className="object-contain object-bottom"
+                style={{ filter: "grayscale(40%) contrast(1.15) brightness(1.05)" }}
+                priority
+              />
             </div>
           </motion.div>
 
@@ -48,98 +61,62 @@ export function HeroSection() {
             variants={slideInRight}
             initial="hidden"
             animate="visible"
-            className="space-y-6"
+            className="max-w-sm flex-shrink-0"
           >
-            <blockquote className="text-lg xl:text-xl font-mono leading-relaxed text-[var(--text-primary)]">
-              &ldquo;Breaking boundaries to craft designs that stand out and
-              deliver results. Blending creativity with strategy, turning bold
-              ideas into digital experiences that captivate and inspire.&rdquo;
-            </blockquote>
-            <div className="flex gap-4">
-              <motion.a
-                href="/projects"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-6 py-3 bg-[var(--text-primary)] text-[var(--bg-primary)] rounded-full font-mono text-sm tracking-wide"
-              >
-                VIEW WORK
-              </motion.a>
-              <motion.a
-                href="/#contact"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-6 py-3 border border-[var(--text-primary)] text-[var(--text-primary)] rounded-full font-mono text-sm tracking-wide"
-              >
-                GET IN TOUCH
-              </motion.a>
-            </div>
+            <p className="text-base xl:text-lg font-mono leading-relaxed text-[#555]">
+              Breaking boundaries to craft designs that stand out and deliver results.
+              Blending creativity with strategy, turning bold ideas into digital
+              experiences that captivate and inspire.
+            </p>
           </motion.div>
         </div>
 
-        {/* Mobile/Tablet: Stacked layout */}
-        <div className="lg:hidden flex flex-col items-center text-center space-y-8">
-          {/* Portrait */}
+        {/* Mobile/Tablet Layout */}
+        <div className="lg:hidden h-full flex flex-col relative z-10 pointer-events-none">
+          {/* Portrait - centered */}
           <motion.div
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
-            className="w-full max-w-xs aspect-[3/4] relative"
+            className="flex-1 flex items-end justify-center px-8 pt-8"
           >
-            <LiquidPortrait />
+            <div className="w-full max-w-sm h-[55%] relative">
+              <Image
+                src="/images/portrait.png"
+                alt="Galib Muktasin"
+                fill
+                className="object-contain object-bottom"
+                style={{ filter: "grayscale(40%) contrast(1.15) brightness(1.05)" }}
+                priority
+              />
+            </div>
           </motion.div>
 
-          {/* Name */}
+          {/* Text content at bottom */}
           <motion.div
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            transition={{ delay: 0.1 }}
-            className="space-y-4"
-          >
-            <h1 className="font-pixel text-4xl sm:text-5xl md:text-6xl leading-[0.9] tracking-tight text-[var(--text-primary)]">
-              GALIB
-              <br />
-              MUKTASIN
-            </h1>
-            <p className="text-xs sm:text-sm font-mono tracking-[0.15em] text-[var(--text-secondary)] uppercase">
-              Engineer · Consultant · Designer
-            </p>
-          </motion.div>
-
-          {/* Manifesto */}
-          <motion.blockquote
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
             transition={{ delay: 0.2 }}
-            className="text-base sm:text-lg font-mono leading-relaxed text-[var(--text-primary)] max-w-md"
+            className="px-8 pb-28 pt-6 space-y-4"
           >
-            &ldquo;Breaking boundaries to craft designs that stand out and
-            deliver results.&rdquo;
-          </motion.blockquote>
+            <div className="text-center">
+              <h1 className="font-pixel text-4xl sm:text-5xl leading-[0.95] tracking-tight text-[#1a1a1a]">
+                GALIB
+                <br />
+                MUKTASIN
+              </h1>
+              <p className="mt-4 text-xs sm:text-sm font-mono tracking-[0.2em] text-[#666] uppercase">
+                Engineer · Consultant · Designer
+              </p>
+            </div>
 
-          {/* CTAs */}
-          <motion.div
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4"
-          >
-            <a
-              href="/projects"
-              className="px-6 py-3 bg-[var(--text-primary)] text-[var(--bg-primary)] rounded-full font-mono text-sm tracking-wide"
-            >
-              VIEW WORK
-            </a>
-            <a
-              href="/#contact"
-              className="px-6 py-3 border border-[var(--text-primary)] text-[var(--text-primary)] rounded-full font-mono text-sm tracking-wide"
-            >
-              GET IN TOUCH
-            </a>
+            <p className="text-sm sm:text-base font-mono leading-relaxed text-[#555] text-center max-w-md mx-auto">
+              Breaking boundaries to craft designs that stand out and deliver results.
+            </p>
           </motion.div>
         </div>
+
       </div>
     </section>
   );

@@ -3,7 +3,8 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { ExternalLink, Github } from "lucide-react";
-import { projects, ventureProjects, engineeringProjects } from "@/data/projects";
+import Image from "next/image";
+import { engineeringProjects, businessProjects, ventureProjects } from "@/data/projects";
 import { Project, ProjectType } from "@/types";
 import { cn } from "@/lib/cn";
 import { staggerContainer, staggerItem } from "@/lib/animations";
@@ -15,31 +16,29 @@ function ToggleSwitch({
   activeType: ProjectType;
   onToggle: (type: ProjectType) => void;
 }) {
+  const tabs: { type: ProjectType; label: string }[] = [
+    { type: "engineering", label: "ENGINEERING" },
+    { type: "business", label: "BUSINESS" },
+    { type: "ventures", label: "VENTURES" },
+  ];
+
   return (
     <div className="flex items-center justify-center mb-12">
       <div className="inline-flex items-center p-1 rounded-full bg-[var(--bg-tertiary)] border border-[var(--glass-border)]">
-        <button
-          onClick={() => onToggle("ventures")}
-          className={cn(
-            "px-6 py-2 rounded-full font-mono text-sm transition-all",
-            activeType === "ventures"
-              ? "bg-[var(--text-primary)] text-[var(--bg-primary)]"
-              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          )}
-        >
-          VENTURES
-        </button>
-        <button
-          onClick={() => onToggle("engineering")}
-          className={cn(
-            "px-6 py-2 rounded-full font-mono text-sm transition-all",
-            activeType === "engineering"
-              ? "bg-[var(--text-primary)] text-[var(--bg-primary)]"
-              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          )}
-        >
-          ENGINEERING
-        </button>
+        {tabs.map((tab) => (
+          <button
+            key={tab.type}
+            onClick={() => onToggle(tab.type)}
+            className={cn(
+              "px-6 py-2 rounded-full font-mono text-sm transition-all",
+              activeType === tab.type
+                ? "bg-[var(--text-primary)] text-[var(--bg-primary)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -61,17 +60,26 @@ function ProjectCard({ project }: { project: Project }) {
         sizeClasses[project.size]
       )}
     >
-      {/* Image Placeholder */}
+      {/* Image */}
       <div
         className={cn(
-          "relative bg-gradient-to-br from-[var(--bg-tertiary)] to-[var(--bg-secondary)]",
-          project.size === "tall" ? "h-48 md:h-64" : "h-48"
+          "relative",
+          project.size === "tall" ? "aspect-[4/3] md:aspect-[3/4]" :
+          project.size === "square" ? "aspect-square" : "aspect-video"
         )}
       >
-        {/* Placeholder pattern */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-20 h-20 rounded-full bg-[var(--text-muted)] opacity-20" />
-        </div>
+        {project.imageUrl ? (
+          <Image
+            src={project.imageUrl}
+            alt={project.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[var(--bg-tertiary)] to-[var(--bg-secondary)]">
+            <div className="w-20 h-20 rounded-full bg-[var(--text-muted)] opacity-20" />
+          </div>
+        )}
 
         {/* Featured badge */}
         {project.featured && (
@@ -141,12 +149,16 @@ function ProjectCard({ project }: { project: Project }) {
 }
 
 export function ProjectsSection() {
-  const [activeType, setActiveType] = useState<ProjectType>("ventures");
+  const [activeType, setActiveType] = useState<ProjectType>("engineering");
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   const displayedProjects =
-    activeType === "ventures" ? ventureProjects : engineeringProjects;
+    activeType === "engineering"
+      ? engineeringProjects
+      : activeType === "business"
+      ? businessProjects
+      : ventureProjects;
 
   return (
     <section

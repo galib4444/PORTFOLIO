@@ -5,13 +5,13 @@ export const milestones: Milestone[] = [
     id: "revenue",
     value: "$1B+",
     label: "Revenue Generated",
-    source: "Glo-Bus Competition - First team in history",
+    source: "Glo-Bus Competition - First team in the competition",
   },
   {
-    id: "market",
+    id: "competition",
     value: "#1",
-    label: "Global Market Share",
-    source: "Cameras & Drones across all regions",
+    label: "Glo-Bus Competition Winner",
+    source: "Queens College - Competed Globally",
   },
   {
     id: "projects",

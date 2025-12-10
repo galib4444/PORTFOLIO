@@ -1,4 +1,4 @@
-export type ProjectType = "ventures" | "engineering";
+export type ProjectType = "engineering" | "business" | "ventures";
 export type CardSize = "tall" | "wide" | "square";
 
 export interface Project {

@@ -25,12 +25,24 @@ export const projects: Project[] = [
       "Innovative techwear startup with CyberCloak smart jacket prototype. Conducted market research with GT-Metrix and SEMrush, developed Shopify e-commerce strategy.",
     techStack: ["Shopify", "SEMrush", "GT-Metrix", "Figma"],
     imageUrl: "/images/projects/gr-iv.jpg",
+    size: "square",
+    featured: true,
+  },
+  {
+    id: "retail-prediction",
+    type: "engineering",
+    title: "Retail Sales Prediction",
+    category: "ML/Data Science",
+    description:
+      "Build Fellowship project: predictive models for retail sales using Prophet, ARIMA, XGBoost/LightGBM. Data preprocessing, feature engineering, business recommendations.",
+    techStack: ["Python", "Prophet", "XGBoost", "ARIMA"],
+    imageUrl: "/images/projects/retail.jpg",
     size: "wide",
     featured: true,
   },
   {
     id: "macro-daily",
-    type: "ventures",
+    type: "engineering",
     title: "Macro Daily",
     category: "FinTech Automation",
     description:
@@ -41,7 +53,7 @@ export const projects: Project[] = [
   },
   {
     id: "lifereward",
-    type: "ventures",
+    type: "engineering",
     title: "LifeReward",
     category: "Mobile Rewards App",
     description:
@@ -100,19 +112,59 @@ export const projects: Project[] = [
     size: "square",
   },
   {
-    id: "retail-prediction",
+    id: "webwise-creators",
     type: "engineering",
-    title: "Retail Sales Prediction",
-    category: "ML/Data Science",
+    title: "WebWise Creators",
+    category: "Web Development",
     description:
-      "Build Fellowship project: predictive models for retail sales using Prophet, ARIMA, XGBoost/LightGBM. Data preprocessing, feature engineering, business recommendations.",
-    techStack: ["Python", "Prophet", "XGBoost", "ARIMA"],
-    imageUrl: "/images/projects/retail.jpg",
+      "Led a team to develop a web service platform with HTML, CSS, and JavaScript. Implemented sticky menus, sliding cards, and tooltips. Used wireframing tools for UI optimization and SEO best practices.",
+    techStack: ["HTML", "CSS", "JavaScript", "SEO"],
+    imageUrl: "/images/projects/webwise.jpg",
+    github: "https://github.com/VRS-Empty/CS355-Project1",
+    size: "square",
+  },
+
+  // ===== BUSINESS =====
+  {
+    id: "glo-bus",
+    type: "business",
+    title: "Glo-Bus Simulation",
+    category: "Business Competition",
+    description:
+      "Led team to 1st place, becoming the first and only team to surpass $1 billion in revenue in competition history. Achieved #1 global market share in cameras and drones across all regions.",
+    techStack: ["Strategy", "Operations", "Marketing", "Finance"],
+    imageUrl: "/images/projects/glo-bus.jpg",
     size: "wide",
+    featured: true,
+    impact: "First team to surpass $1B revenue",
+  },
+  {
+    id: "fed-challenge",
+    type: "business",
+    title: "Fed Challenge",
+    category: "Economic Research",
+    description:
+      "Built Macro Daily, a zero-cost Python pipeline pulling news and official data from APIs, summarizing via AI, and posting 7:15 ET Telegram briefs. Created Tableau dashboards for jobs, CPI, yields, trade, and GDP.",
+    techStack: ["Python", "Tableau", "APIs", "Economic Analysis"],
+    imageUrl: "/images/projects/fed-challenge.jpg",
+    size: "wide",
+    featured: true,
+    impact: "Automated daily economic briefings",
+  },
+  {
+    id: "qc-enrollment",
+    type: "business",
+    title: "QC Admission & Enrollment",
+    category: "Market Research",
+    description:
+      "Analyzed Queens College enrollment data (2013–2022) to identify declining enrollment drivers. Developed targeted marketing strategies including word-of-mouth campaigns, social media presence, and personalized outreach to boost enrollment.",
+    techStack: ["Data Analysis", "Marketing Strategy", "Research"],
+    imageUrl: "/images/projects/qc-enrollment.jpg",
+    size: "wide",
+    impact: "Strategic recommendations for enrollment growth",
   },
 ];
 
+export const engineeringProjects = projects.filter((p) => p.type === "engineering");
+export const businessProjects = projects.filter((p) => p.type === "business");
 export const ventureProjects = projects.filter((p) => p.type === "ventures");
-export const engineeringProjects = projects.filter(
-  (p) => p.type === "engineering"
-);
