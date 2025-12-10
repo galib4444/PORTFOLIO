@@ -163,7 +163,8 @@ function FluidMesh({ imageUrl, isHovering, mousePos, velocity }: FluidMeshProps)
   const currentVelo = useRef(0);
 
   // Calculate image aspect ratio
-  const imageAspect = texture.image ? texture.image.width / texture.image.height : 1;
+  const textureImage = texture.image as HTMLImageElement | undefined;
+  const imageAspect = textureImage ? textureImage.width / textureImage.height : 1;
   const containerAspect = size.width / size.height;
 
   const uniforms = useMemo(
