@@ -57,7 +57,7 @@ export function ProjectsPreview() {
               className="group relative bg-[var(--bg-secondary)] rounded-2xl overflow-hidden border border-[var(--glass-border)] hover:border-[var(--accent-orange)] transition-all duration-300"
             >
               {/* Image */}
-              <div className="relative aspect-video">
+              <div className={`relative ${project.size === "square" ? "aspect-square" : "aspect-video"}`}>
                 {project.imageUrl ? (
                   <Image
                     src={project.imageUrl}

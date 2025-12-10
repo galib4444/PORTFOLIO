@@ -74,7 +74,7 @@ export const projects: Project[] = [
     techStack: ["Python", "C", "Cryptography", "ZKP"],
     imageUrl: "/images/projects/cross.jpg",
     github: "https://github.com/galib/cross",
-    size: "tall",
+    size: "square",
     featured: true,
   },
   {
@@ -147,7 +147,7 @@ export const projects: Project[] = [
       "Built Macro Daily, a zero-cost Python pipeline pulling news and official data from APIs, summarizing via AI, and posting 7:15 ET Telegram briefs. Created Tableau dashboards for jobs, CPI, yields, trade, and GDP.",
     techStack: ["Python", "Tableau", "APIs", "Economic Analysis"],
     imageUrl: "/images/projects/fed-challenge.jpg",
-    size: "wide",
+    size: "square",
     featured: true,
     impact: "Automated daily economic briefings",
   },
