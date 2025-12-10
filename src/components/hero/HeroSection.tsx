@@ -1,9 +1,34 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
+import Link from "next/link";
 import { FluidOverlay } from "@/components/webgl/FluidOverlay";
-import { fadeInUp, slideInLeft, slideInRight } from "@/lib/animations";
+import { fadeInUp } from "@/lib/animations";
+
+interface ElectricButtonProps {
+  href: string;
+  variant: "primary" | "secondary";
+  children: React.ReactNode;
+}
+
+function ElectricButton({ href, variant, children }: ElectricButtonProps) {
+  const isPrimary = variant === "primary";
+
+  return (
+    <div className="electric-border rounded-full p-[2px] relative z-30 pointer-events-auto">
+      <Link
+        href={href}
+        className={`block px-8 py-3 rounded-full font-mono text-sm tracking-wide transition-colors text-center relative cursor-pointer ${
+          isPrimary
+            ? "bg-[#1a1a1a] text-white hover:bg-[#333]"
+            : "bg-[#e8e8e8] border-2 border-[#1a1a1a] text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white"
+        }`}
+      >
+        {children}
+      </Link>
+    </div>
+  );
+}
 
 export function HeroSection() {
   return (
@@ -17,104 +42,58 @@ export function HeroSection() {
         {/* Fluid Distortion Overlay - covers entire container */}
         <FluidOverlay />
 
-        {/* Desktop Layout */}
-        <div className="hidden lg:flex h-full items-center justify-between px-8 xl:px-16 2xl:px-24 relative z-10 pointer-events-none">
-          {/* Left: Name & Subtitle */}
-          <motion.div
-            variants={slideInLeft}
-            initial="hidden"
-            animate="visible"
-            className="flex-shrink-0"
-          >
-            <h1 className="font-pixel text-5xl xl:text-6xl 2xl:text-7xl leading-[0.95] tracking-tight text-[#1a1a1a]">
-              GALIB
-              <br />
-              MUKTASIN
-            </h1>
-            <p className="mt-6 text-xs xl:text-sm font-mono tracking-[0.25em] text-[#666] uppercase">
-              Engineer · Consultant · Designer
-            </p>
-          </motion.div>
+        {/* Centered Content */}
+        <div className="h-full flex flex-col items-center justify-center px-6 md:px-8 lg:px-16 relative z-30 pointer-events-none">
 
-          {/* Center: Portrait Image */}
-          <motion.div
+          {/* Name - Large Gradient Text */}
+          <motion.h1
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
-            className="absolute left-1/2 -translate-x-1/2 top-0 h-full flex items-end justify-center pb-8"
-            style={{ width: "45%", maxWidth: "550px" }}
+            className="font-pixel text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.9] tracking-tight text-center gradient-text"
           >
-            <div className="w-full h-[90%] relative">
-              <Image
-                src="/images/portrait.png"
-                alt="Galib Muktasin"
-                fill
-                className="object-contain object-bottom"
-                style={{ filter: "grayscale(40%) contrast(1.15) brightness(1.05)" }}
-                priority
-              />
-            </div>
-          </motion.div>
+            GALIB
+            <br />
+            MUKTASIN
+          </motion.h1>
 
-          {/* Right: Manifesto */}
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="mt-6 md:mt-8 text-xs sm:text-sm md:text-base font-mono tracking-[0.2em] md:tracking-[0.3em] text-[#666] uppercase text-center"
+          >
+            Engineer · Consultant · Designer
+          </motion.p>
+
+          {/* Tagline */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="mt-6 md:mt-8 text-sm sm:text-base md:text-lg font-mono leading-relaxed text-[#555] text-center max-w-xl lg:max-w-2xl"
+          >
+            Breaking boundaries to craft designs that stand out and deliver results.
+            Blending creativity with strategy, turning bold ideas into digital
+            experiences that captivate and inspire.
+          </motion.p>
+
+          {/* CTA Buttons */}
           <motion.div
-            variants={slideInRight}
-            initial="hidden"
-            animate="visible"
-            className="max-w-sm flex-shrink-0"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.7, duration: 0.4 }}
+            className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-6 pointer-events-auto"
           >
-            <p className="text-base xl:text-lg font-mono leading-relaxed text-[#555]">
-              Breaking boundaries to craft designs that stand out and deliver results.
-              Blending creativity with strategy, turning bold ideas into digital
-              experiences that captivate and inspire.
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Mobile/Tablet Layout */}
-        <div className="lg:hidden h-full flex flex-col relative z-10 pointer-events-none">
-          {/* Portrait - centered */}
-          <motion.div
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            className="flex-1 flex items-end justify-center px-8 pt-8"
-          >
-            <div className="w-full max-w-sm h-[55%] relative">
-              <Image
-                src="/images/portrait.png"
-                alt="Galib Muktasin"
-                fill
-                className="object-contain object-bottom"
-                style={{ filter: "grayscale(40%) contrast(1.15) brightness(1.05)" }}
-                priority
-              />
-            </div>
+            <ElectricButton href="/projects" variant="secondary">
+              VIEW WORK
+            </ElectricButton>
+            <ElectricButton href="/contact" variant="secondary">
+              GET IN TOUCH
+            </ElectricButton>
           </motion.div>
 
-          {/* Text content at bottom */}
-          <motion.div
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            transition={{ delay: 0.2 }}
-            className="px-8 pb-28 pt-6 space-y-4"
-          >
-            <div className="text-center">
-              <h1 className="font-pixel text-4xl sm:text-5xl leading-[0.95] tracking-tight text-[#1a1a1a]">
-                GALIB
-                <br />
-                MUKTASIN
-              </h1>
-              <p className="mt-4 text-xs sm:text-sm font-mono tracking-[0.2em] text-[#666] uppercase">
-                Engineer · Consultant · Designer
-              </p>
-            </div>
-
-            <p className="text-sm sm:text-base font-mono leading-relaxed text-[#555] text-center max-w-md mx-auto">
-              Breaking boundaries to craft designs that stand out and deliver results.
-            </p>
-          </motion.div>
         </div>
 
       </div>

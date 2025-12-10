@@ -201,52 +201,57 @@ export function FluidOverlay() {
     setIsClient(true);
   }, []);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = 1 - (e.clientY - rect.top) / rect.height;
-
-    const newPos = {
-      x: Math.max(0, Math.min(1, x)),
-      y: Math.max(0, Math.min(1, y))
-    };
-
-    // Calculate velocity
-    const dx = newPos.x - lastMouseRef.current.x;
-    const dy = newPos.y - lastMouseRef.current.y;
-    const newVelocity = Math.min(Math.sqrt(dx * dx + dy * dy) * 25, 1);
-
-    setMousePos(newPos);
-    setVelocity(newVelocity);
-    lastMouseRef.current = newPos;
-
-    if (velocityDecayRef.current) {
-      cancelAnimationFrame(velocityDecayRef.current);
-    }
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovering(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    const decay = () => {
-      setVelocity(v => {
-        const newV = v * 0.9;
-        if (newV > 0.001) {
-          velocityDecayRef.current = requestAnimationFrame(decay);
-        }
-        return newV;
-      });
-    };
-    velocityDecayRef.current = requestAnimationFrame(decay);
-  };
-
   useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = 1 - (e.clientY - rect.top) / rect.height;
+
+      const newPos = {
+        x: Math.max(0, Math.min(1, x)),
+        y: Math.max(0, Math.min(1, y))
+      };
+
+      // Check if mouse is within bounds
+      const isInBounds = x >= 0 && x <= 1 && y >= 0 && y <= 1;
+      setIsHovering(isInBounds);
+
+      // Calculate velocity
+      const dx = newPos.x - lastMouseRef.current.x;
+      const dy = newPos.y - lastMouseRef.current.y;
+      const newVelocity = Math.min(Math.sqrt(dx * dx + dy * dy) * 25, 1);
+
+      setMousePos(newPos);
+      setVelocity(newVelocity);
+      lastMouseRef.current = newPos;
+
+      if (velocityDecayRef.current) {
+        cancelAnimationFrame(velocityDecayRef.current);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      setIsHovering(false);
+      const decay = () => {
+        setVelocity(v => {
+          const newV = v * 0.9;
+          if (newV > 0.001) {
+            velocityDecayRef.current = requestAnimationFrame(decay);
+          }
+          return newV;
+        });
+      };
+      velocityDecayRef.current = requestAnimationFrame(decay);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseleave', handleMouseLeave);
+
     return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
       if (velocityDecayRef.current) {
         cancelAnimationFrame(velocityDecayRef.current);
       }
@@ -260,15 +265,12 @@ export function FluidOverlay() {
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 z-20 pointer-events-auto cursor-crosshair"
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      className="absolute inset-0 z-20 pointer-events-none"
     >
       <Canvas
         camera={{ position: [0, 0, 1], fov: 75 }}
         gl={{ antialias: true, alpha: true }}
-        style={{ background: "transparent" }}
+        style={{ background: "transparent", pointerEvents: "none" }}
       >
         <FluidMesh
           isHovering={isHovering}

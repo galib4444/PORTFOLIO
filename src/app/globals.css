@@ -126,6 +126,60 @@ body {
   font-family: var(--font-rubik-pixels), cursive;
 }
 
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #ff6b35, #ff3b3b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Electric Border Animation */
+.electric-border {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 9999px;
+}
+
+.electric-border::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 25%,
+    #ffd700 30%,
+    #ffb347 35%,
+    #ffd700 40%,
+    transparent 45%,
+    transparent 100%
+  );
+  animation: electric-spin 2s linear infinite;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.electric-border::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 9999px;
+  background: inherit;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes electric-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Smooth Scroll Behavior */
 @media (prefers-reduced-motion: no-preference) {
   html {
