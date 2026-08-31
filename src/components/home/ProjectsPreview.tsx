@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { projects } from "@/data/projects";
 import Link from "next/link";
@@ -32,7 +32,7 @@ export function ProjectsPreview() {
               SELECTED WORK
             </h2>
             <p className="text-[var(--text-secondary)] font-mono">
-              Featured projects across AI, SaaS, and research
+              Featured projects across AI, product, and research
             </p>
           </div>
           <Link
@@ -51,62 +51,66 @@ export function ProjectsPreview() {
           className="grid md:grid-cols-3 gap-6"
         >
           {featuredProjects.map((project) => (
-            <motion.article
-              key={project.id}
-              variants={staggerItem}
-              className="group relative bg-[var(--bg-secondary)] rounded-2xl overflow-hidden border border-[var(--glass-border)] hover:border-[var(--accent-orange)] transition-all duration-300"
-            >
-              {/* Image */}
-              <div className={`relative ${project.size === "square" ? "aspect-square" : "aspect-video"}`}>
-                {project.imageUrl ? (
-                  <Image
-                    src={project.imageUrl}
-                    alt={project.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[var(--bg-tertiary)] to-[var(--bg-secondary)]">
-                    <div className="w-16 h-16 rounded-full bg-[var(--text-muted)] opacity-20" />
-                  </div>
-                )}
-                {project.link && (
-                  <a
-                    href={project.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute top-3 right-3 p-2 bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
-                    <ExternalLink size={14} className="text-[var(--text-primary)]" />
-                  </a>
-                )}
-              </div>
-
-              {/* Content */}
-              <div className="p-5">
-                <span className="text-xs font-mono text-[var(--accent-orange)] uppercase tracking-wider">
-                  {project.category}
-                </span>
-                <h3 className="font-bold text-lg text-[var(--text-primary)] mt-1 mb-2 group-hover:text-[var(--accent-orange)] transition-colors">
-                  {project.title}
-                </h3>
-                <p className="text-sm text-[var(--text-secondary)] font-mono leading-relaxed line-clamp-2">
-                  {project.description}
-                </p>
-
-                {/* Tech Stack - condensed */}
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {project.techStack.slice(0, 3).map((tech) => (
-                    <span
-                      key={tech}
-                      className="px-2 py-0.5 text-xs font-mono bg-[var(--bg-tertiary)] text-[var(--text-muted)] rounded"
-                    >
-                      {tech}
-                    </span>
-                  ))}
+            <motion.div key={project.id} variants={staggerItem}>
+              <Link
+                href={`/projects?project=${project.id}`}
+                className="group relative block h-full bg-[var(--bg-secondary)] rounded-2xl overflow-hidden border border-[var(--glass-border)] hover:border-[var(--accent-orange)] transition-all duration-300"
+              >
+                {/* Image */}
+                <div
+                  className={`relative ${
+                    project.size === "square" ? "aspect-square" : "aspect-video"
+                  }`}
+                >
+                  {project.imageUrl ? (
+                    <Image
+                      src={project.imageUrl}
+                      alt={project.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[var(--bg-tertiary)] to-[var(--bg-secondary)]">
+                      <span className="font-pixel text-3xl text-[var(--text-muted)] opacity-40">
+                        {project.title
+                          .split(/\s+/)
+                          .slice(0, 2)
+                          .map((w) => w[0])
+                          .join("")}
+                      </span>
+                    </div>
+                  )}
+                  <span className="absolute bottom-3 right-3 px-3 py-1 rounded-full bg-black/70 text-white text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+                    VIEW DETAILS →
+                  </span>
                 </div>
-              </div>
-            </motion.article>
+
+                {/* Content */}
+                <div className="p-5">
+                  <span className="text-xs font-mono text-[var(--accent-orange)] uppercase tracking-wider">
+                    {project.category}
+                  </span>
+                  <h3 className="font-bold text-lg text-[var(--text-primary)] mt-1 mb-2 group-hover:text-[var(--accent-orange)] transition-colors">
+                    {project.title}
+                  </h3>
+                  <p className="text-sm text-[var(--text-secondary)] font-mono leading-relaxed line-clamp-2">
+                    {project.description}
+                  </p>
+
+                  {/* Tech Stack - condensed */}
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {project.techStack.slice(0, 3).map((tech) => (
+                      <span
+                        key={tech}
+                        className="px-2 py-0.5 text-xs font-mono bg-[var(--bg-tertiary)] text-[var(--text-muted)] rounded"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
           ))}
         </motion.div>
       </div>

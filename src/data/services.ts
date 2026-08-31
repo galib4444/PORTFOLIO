@@ -4,25 +4,25 @@ export const services: Service[] = [
   {
     id: "ai",
     title: "AI ENGINEERING",
-    description: "Claude Code, OpenAI/Gemini API, YOLOv5, PyTorch",
+    description: "Claude Code, multi-agent systems, Gemini & OpenAI APIs, YOLO, PyTorch",
     icon: "Brain",
   },
   {
     id: "fullstack",
     title: "FULL-STACK DEV",
-    description: "React Native, Next.js, Node.js, MongoDB",
+    description: "React Native, Next.js, Node.js/Express, MongoDB, Redis, CI/CD",
     icon: "Code",
   },
   {
-    id: "strategy",
-    title: "TECH STRATEGY",
-    description: "Market research, product positioning, growth tactics",
+    id: "consulting",
+    title: "CONSULTING & DELIVERY",
+    description: "Discovery, sales funnels, onboarding & training, go-live support",
     icon: "Target",
   },
   {
     id: "data",
     title: "DATA & BI",
-    description: "Tableau, SQL, Python analytics, forecasting",
+    description: "Tableau, SQL, Python analytics, time-series forecasting",
     icon: "BarChart3",
   },
 ];

@@ -84,12 +84,14 @@ function TimelineItem({
         </ul>
 
         {/* Impact */}
-        <div className="pt-4 border-t border-[var(--glass-border)]">
-          <p className="text-xs font-mono text-[var(--accent-green)]">
-            <span className="text-[var(--text-muted)]">Impact:</span>{" "}
-            {job.impact}
-          </p>
-        </div>
+        {job.impact && (
+          <div className="pt-4 border-t border-[var(--glass-border)]">
+            <p className="text-xs font-mono text-[var(--accent-green)]">
+              <span className="text-[var(--text-muted)]">Impact:</span>{" "}
+              {job.impact}
+            </p>
+          </div>
+        )}
       </div>
     </motion.div>
   );

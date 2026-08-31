@@ -14,6 +14,13 @@ export interface Project {
   size: CardSize;
   featured?: boolean;
   impact?: string;
+  /* Detail view (shown when a project card is opened) */
+  role?: string;
+  timeline?: string;
+  status?: string;
+  context?: string;
+  contributions?: string[];
+  outcomes?: string[];
 }
 
 export interface Job {
@@ -24,7 +31,7 @@ export interface Job {
   period: string;
   current?: boolean;
   bullets: string[];
-  impact: string;
+  impact?: string;
 }
 
 export interface Service {

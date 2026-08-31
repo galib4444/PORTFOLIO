@@ -7,6 +7,8 @@ import { experience } from "@/data/experience";
 import Link from "next/link";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 
+const previewJobs = experience.slice(0, 4);
+
 export function ExperiencePreview() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
@@ -45,9 +47,9 @@ export function ExperiencePreview() {
           variants={staggerContainer}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
-          className="grid md:grid-cols-3 gap-6"
+          className="grid sm:grid-cols-2 gap-6"
         >
-          {experience.map((job) => (
+          {previewJobs.map((job) => (
             <motion.div
               key={job.id}
               variants={staggerItem}
@@ -83,11 +85,13 @@ export function ExperiencePreview() {
               </p>
 
               {/* Impact */}
-              <div className="mt-4 pt-4 border-t border-[var(--glass-border)]">
-                <p className="text-xs font-mono text-[var(--accent-green)]">
-                  {job.impact}
-                </p>
-              </div>
+              {job.impact && (
+                <div className="mt-4 pt-4 border-t border-[var(--glass-border)]">
+                  <p className="text-xs font-mono text-[var(--accent-green)]">
+                    {job.impact}
+                  </p>
+                </div>
+              )}
             </motion.div>
           ))}
         </motion.div>

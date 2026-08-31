@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { ExternalLink, Github } from "lucide-react";
-import Image from "next/image";
 import { engineeringProjects, businessProjects, ventureProjects } from "@/data/projects";
 import { Project, ProjectType } from "@/types";
 import { cn } from "@/lib/cn";
 import { staggerContainer, staggerItem } from "@/lib/animations";
+import { ProjectModal } from "./ProjectModal";
+import Image from "next/image";
+
+const allProjects = [...engineeringProjects, ...businessProjects, ...ventureProjects];
 
 function ToggleSwitch({
   activeType,
@@ -44,7 +46,13 @@ function ToggleSwitch({
   );
 }
 
-function ProjectCard({ project }: { project: Project }) {
+function ProjectCard({
+  project,
+  onOpen,
+}: {
+  project: Project;
+  onOpen: () => void;
+}) {
   const sizeClasses = {
     tall: "md:row-span-2",
     wide: "md:col-span-2",
@@ -52,11 +60,14 @@ function ProjectCard({ project }: { project: Project }) {
   };
 
   return (
-    <motion.article
+    <motion.button
+      type="button"
+      onClick={onOpen}
+      aria-haspopup="dialog"
       variants={staggerItem}
       layout
       className={cn(
-        "group relative bg-[var(--bg-secondary)] rounded-2xl overflow-hidden border border-[var(--glass-border)] hover:border-[var(--accent-orange)] transition-all duration-300",
+        "group relative text-left w-full bg-[var(--bg-secondary)] rounded-2xl overflow-hidden border border-[var(--glass-border)] hover:border-[var(--accent-orange)] transition-all duration-300",
         sizeClasses[project.size]
       )}
     >
@@ -64,8 +75,11 @@ function ProjectCard({ project }: { project: Project }) {
       <div
         className={cn(
           "relative",
-          project.size === "tall" ? "aspect-[4/3] md:aspect-[3/4]" :
-          project.size === "square" ? "aspect-square" : "aspect-video"
+          project.size === "tall"
+            ? "aspect-[4/3] md:aspect-[3/4]"
+            : project.size === "square"
+            ? "aspect-square"
+            : "aspect-video"
         )}
       >
         {project.imageUrl ? (
@@ -77,7 +91,13 @@ function ProjectCard({ project }: { project: Project }) {
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[var(--bg-tertiary)] to-[var(--bg-secondary)]">
-            <div className="w-20 h-20 rounded-full bg-[var(--text-muted)] opacity-20" />
+            <span className="font-pixel text-3xl text-[var(--text-muted)] opacity-40">
+              {project.title
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join("")}
+            </span>
           </div>
         )}
 
@@ -88,28 +108,9 @@ function ProjectCard({ project }: { project: Project }) {
           </div>
         )}
 
-        {/* Links */}
-        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {project.link && (
-            <a
-              href={project.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
-            >
-              <ExternalLink size={16} className="text-[var(--text-primary)]" />
-            </a>
-          )}
-          {project.github && (
-            <a
-              href={project.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
-            >
-              <Github size={16} className="text-[var(--text-primary)]" />
-            </a>
-          )}
+        {/* View details affordance */}
+        <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-black/70 text-white text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+          VIEW DETAILS →
         </div>
       </div>
 
@@ -144,14 +145,42 @@ function ProjectCard({ project }: { project: Project }) {
           </p>
         )}
       </div>
-    </motion.article>
+    </motion.button>
   );
 }
 
 export function ProjectsSection() {
   const [activeType, setActiveType] = useState<ProjectType>("engineering");
+  const [selected, setSelected] = useState<Project | null>(null);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  const openProject = useCallback((project: Project) => {
+    setSelected(project);
+    setActiveType(project.type);
+    const url = new URL(window.location.href);
+    url.searchParams.set("project", project.id);
+    window.history.replaceState({}, "", url.toString());
+  }, []);
+
+  const closeProject = useCallback(() => {
+    setSelected(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("project");
+    window.history.replaceState({}, "", url.toString());
+  }, []);
+
+  // Open a project directly from a ?project=<id> link (e.g. from the homepage preview).
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("project");
+    if (!id) return;
+    const match = allProjects.find((p) => p.id === id);
+    if (!match) return;
+    queueMicrotask(() => {
+      setSelected(match);
+      setActiveType(match.type);
+    });
+  }, []);
 
   const displayedProjects =
     activeType === "engineering"
@@ -177,7 +206,8 @@ export function ProjectsSection() {
             PROJECTS
           </h2>
           <p className="text-[var(--text-secondary)] font-mono max-w-2xl mx-auto">
-            From AI-powered platforms to post-quantum cryptography research
+            From AI-powered platforms to post-quantum cryptography research —
+            select any project for the full breakdown
           </p>
         </motion.div>
 
@@ -195,11 +225,17 @@ export function ProjectsSection() {
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {displayedProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+              <ProjectCard
+                key={project.id}
+                project={project}
+                onOpen={() => openProject(project)}
+              />
             ))}
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <ProjectModal project={selected} onClose={closeProject} />
     </section>
   );
 }
