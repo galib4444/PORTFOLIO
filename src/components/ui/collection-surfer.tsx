@@ -22,6 +22,12 @@ export type CollectionSurferVariant = "magnetic" | "uplift" | "simple";
 interface CollectionSurferProps {
   items: CollectionItem[];
   variant?: CollectionSurferVariant;
+  /**
+   * Optional full-bleed layer rendered behind the cards inside the pinned
+   * viewport (e.g. an animated background). Sits above the solid black base
+   * and below the surfing cards and the heading.
+   */
+  background?: React.ReactNode;
   /** Optional overlay rendered on top of the pinned viewport (e.g. a headline). */
   heading?: React.ReactNode;
   /**
@@ -48,6 +54,7 @@ const TRAVERSE_END = 0.86;
 export function CollectionSurfer({
   items,
   variant = "magnetic",
+  background,
   heading,
   scrollLengthVh,
 }: CollectionSurferProps) {
@@ -112,6 +119,12 @@ export function CollectionSurfer({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
+        {background ? (
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            {background}
+          </div>
+        ) : null}
+
         {heading}
 
         <div className="absolute bottom-[3vw] right-[3vw] z-20 font-mono text-[0.65rem] tracking-[0.2em] uppercase opacity-60 pointer-events-none">
@@ -120,7 +133,7 @@ export function CollectionSurfer({
 
         {/* 3D scene */}
         <div
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute inset-0 z-10 flex items-center justify-center"
           style={{
             perspective: "2000px",
             perspectiveOrigin: "10% 10%",
