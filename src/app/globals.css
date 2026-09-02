@@ -104,7 +104,9 @@ body {
   color: var(--text-primary);
   font-family: var(--font-space-mono), ui-monospace, monospace;
   min-height: 100vh;
-  overflow-x: hidden;
+  /* `clip` (not `hidden`) so the pinned hero's `position: sticky` still works
+     — `overflow-x: hidden` turns <body> into a scroll container and breaks it. */
+  overflow-x: clip;
 }
 
 /* Glass Utilities */
