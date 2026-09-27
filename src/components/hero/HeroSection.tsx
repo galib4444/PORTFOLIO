@@ -2,8 +2,12 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FluidOverlay } from "@/components/webgl/FluidOverlay";
+import { DragonReflow } from "@/components/hero/DragonReflow";
+import { projects } from "@/data/projects";
 import { fadeInUp } from "@/lib/animations";
+
+// Background copy the dragon flies through: every project blurb, looped.
+const reflowText = projects.map((p) => p.description).join("  ◆  ");
 
 interface ElectricButtonProps {
   href: string;
@@ -39,8 +43,8 @@ export function HeroSection() {
       {/* Large rounded container */}
       <div className="w-full h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] bg-[#e8e8e8] rounded-[2rem] md:rounded-[3rem] lg:rounded-[4rem] relative overflow-hidden">
 
-        {/* Fluid Distortion Overlay - covers entire container */}
-        <FluidOverlay />
+        {/* Dragon + project text that re-flows around it (Pretext) */}
+        <DragonReflow text={reflowText} />
 
         {/* Centered Content */}
         <div className="h-full flex flex-col items-center justify-center px-6 md:px-8 lg:px-16 relative z-30 pointer-events-none">
@@ -50,6 +54,7 @@ export function HeroSection() {
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
+            data-reflow-exclude
             className="font-pixel text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.9] tracking-tight text-center gradient-text"
           >
             GALIB
@@ -62,6 +67,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
+            data-reflow-exclude
             className="mt-6 md:mt-8 text-xs sm:text-sm md:text-base font-mono tracking-[0.2em] md:tracking-[0.3em] text-[#666] uppercase text-center"
           >
             Engineer · Consultant · Designer
@@ -72,6 +78,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.5 }}
+            data-reflow-exclude
             className="mt-6 md:mt-8 text-sm sm:text-base md:text-lg font-mono leading-relaxed text-[#555] text-center max-w-xl lg:max-w-2xl"
           >
             Breaking boundaries to craft designs that stand out and deliver results.
@@ -84,6 +91,7 @@ export function HeroSection() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.7, duration: 0.4 }}
+            data-reflow-exclude
             className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-6 pointer-events-auto"
           >
             <ElectricButton href="/projects" variant="secondary">
