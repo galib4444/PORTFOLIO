@@ -9,15 +9,17 @@ import {
 } from "@chenglou/pretext";
 
 /**
- * A hand-painted dragon that flies around the hero while background text
- * re-flows around its body every step (via Pretext — no DOM measurement).
- * Holding the mouse makes it breathe fire, which scatters nearby letters.
+ * A hand-painted dragon that follows the cursor across the whole page. While it
+ * is over the hero, the hero's background text re-flows around its body every
+ * step (via Pretext — no DOM measurement). Holding the mouse makes it breathe
+ * fire, which scatters nearby letters.
  *
  * Dragon sprites + physics adapted from illustrated-manuscript by dengshu2
  * (ISC): https://github.com/dengshu2/illustrated-manuscript
  *
- * Render inside a `position: relative` container. Any descendant of that
- * container marked `data-reflow-exclude` is kept clear of text.
+ * Render inside a `position: relative` container; the reflow text fills that
+ * container and the dragon flies on a fixed, full-viewport layer. Any
+ * descendant of the container marked `data-reflow-exclude` is kept clear of text.
  */
 
 // Physics constants from illustrated-manuscript/src/config.js
@@ -29,10 +31,18 @@ const SEG_WIDTHS = [221, 130, 203, 223, 285, 299, 281, 224, 192, 174, 191, 156, 
 // Sprites in /public/dragon-sprites are stored at half the original size.
 const SPRITE_STORE_RATIO = 2;
 
+// fire particles still advance in fixed steps; the dragon itself moves every frame
 const STEP_MS = 70;
-const IDLE_MS = 2200;
+// how long the cursor must rest before the dragon flies off on its idle loop
+const IDLE_MS = 1000;
+// the idle loop's radii, as fractions of the viewport
+const ORBIT_X = 0.33, ORBIT_Y = 0.28, ORBIT_SPEED = 0.00035;
+// re-lay out the hero text at most this often while the dragon moves
+const LAYOUT_MS = 33;
 const FIRE_COLORS = ["#ff3b3b", "#ff6b35", "#ffb347"];
 const TEXT_COLOR = "#b4b4b4";
+// clicks on these never make the dragon breathe fire
+const NO_FIRE = "a, button, input, textarea, select, label, [contenteditable]";
 
 type Seg = { x: number; y: number; angle: number; width: number };
 type Spark = {
@@ -47,6 +57,11 @@ const SPRITE_NAMES = [
   "head", "tongue", "wing-front", "wing-back",
   ...Array.from({ length: 19 }, (_, i) => `body-${i + 1}`),
 ];
+
+// frame-rate independent easing factor for a time constant of `ms`
+function ease(dt: number, ms: number) {
+  return 1 - Math.exp(-dt / ms);
+}
 
 function hash(seed: number) {
   const t = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
@@ -93,7 +108,8 @@ export function DragonReflow({ text }: { text: string }) {
     if (!tc || !dc || !box || !tctx || !dctx) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let W = 0, H = 0, scale = 1, pad = 44;
+    // W/H: the hero box (text layer); VW/VH: the viewport (dragon layer)
+    let W = 0, H = 0, VW = 0, VH = 0, scale = 1, pad = 44;
     let font = "", fontSize = 13, lineH = 22, cornerR = 64;
     let prepared: PreparedTextWithSegments | null = null;
     let lines: Line[] = [];
@@ -110,20 +126,27 @@ export function DragonReflow({ text }: { text: string }) {
 
     const segs: Seg[] = [];
     const fire: Spark[] = [];
-    let seed = 0, lastStep = 0, fireLast = 0, lastSpawn = 0;
+    let fireLast = 0, lastSpawn = 0, lastLayout = 0;
     let mouse = { x: 0, y: 0 }, lastMove = -1e9, holding = false, burstUntil = 0;
-    let raf = 0, running = false, visible = true;
+    // smooth flight: the head steers with a velocity toward a goal point that itself glides,
+    // so stopping, starting and switching to idle never snap
+    const flight = { vx: 0, vy: 0, gx: 0, gy: 0, idle: false, phase: 0, lastT: 0 };
+    let raf = 0, running = false, heroVisible = true, scrolled = false;
+    // hero-box origin in viewport coordinates, refreshed before each text layout
+    let ox = 0, oy = 0;
 
     const segWidth = (i: number) => SEG_WIDTHS[i] * SPRITE_SCALE * scale;
 
     function measure() {
       const r = box!.getBoundingClientRect();
       W = r.width; H = r.height;
+      VW = window.innerWidth; VH = window.innerHeight;
       const dpr = Math.min(2, window.devicePixelRatio || 1);
-      for (const c of [tc!, dc!]) { c.width = W * dpr; c.height = H * dpr; }
+      tc!.width = W * dpr; tc!.height = H * dpr;
+      dc!.width = VW * dpr; dc!.height = VH * dpr;
       tctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       dctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      scale = Math.max(0.55, Math.min(1.15, W / 1250));
+      scale = Math.max(0.55, Math.min(1.15, VW / 1250));
       pad = W < 640 ? 22 : 44;
       cornerR = parseFloat(getComputedStyle(box!).borderTopLeftRadius) || 0;
       fontSize = W < 640 ? 11 : W < 1100 ? 12 : 13;
@@ -149,31 +172,53 @@ export function DragonReflow({ text }: { text: string }) {
 
     function resetDragon() {
       segs.length = 0;
-      const x = W * 0.78, y = H * 0.3;
+      const x = VW * 0.78, y = VH * 0.3;
       for (let i = 0; i < SEG_COUNT; i++) segs.push({ x: x + i * SEG_SPACING * scale, y, angle: Math.PI, width: segWidth(i) });
+      // idle = false makes the next idle step join the loop at the point nearest the dragon
+      flight.gx = x; flight.gy = y; flight.vx = 0; flight.vy = 0; flight.idle = false;
     }
 
-    // idle flight: an orbit around the centre content, so it crosses the text, not the headline
-    function wander(t: number) {
-      const s = t * 0.00035;
-      return { x: W * (0.5 + 0.41 * Math.cos(s)), y: H * (0.5 + 0.37 * Math.sin(s)) };
+    // idle flight: an orbit around the middle of the screen
+    function idlePoint(t: number) {
+      const s = t * ORBIT_SPEED + flight.phase;
+      return { x: VW * (0.5 + ORBIT_X * Math.cos(s)), y: VH * (0.5 + ORBIT_Y * Math.sin(s)) };
     }
 
     function updateDragon(t: number) {
-      if (t - lastStep < STEP_MS) return false;
-      lastStep = t;
-      seed = Math.random() * 1000;
+      const dt = Math.min(50, Math.max(1, t - (flight.lastT || t - 16)));
+      flight.lastT = t;
+      const head = segs[0];
       const idle = t - lastMove > IDLE_MS;
       if (idle && reduced) return false;
-      const target = idle ? wander(t) : mouse;
-      const head = segs[0];
-      const dx = target.x - head.x, dy = target.y - head.y, dist = Math.hypot(dx, dy);
-      if (dist > 4) {
-        const speed = Math.min(dist, Math.max(12 * scale, dist * 0.15)) * (idle ? 0.8 : 1);
-        head.x += (dx / dist) * speed;
-        head.y += (dy / dist) * speed;
-        head.angle += wrapAngle(Math.atan2(dy, dx) - head.angle) * (idle ? 0.35 : 1);
+      if (idle && !flight.idle) {
+        // join the idle loop at its nearest point, so the dragon drifts off instead of lurching across the screen
+        const s0 = Math.atan2((head.y / VH - 0.5) / ORBIT_Y, (head.x / VW - 0.5) / ORBIT_X);
+        flight.phase = s0 - t * ORBIT_SPEED;
       }
+      flight.idle = idle;
+      // follow the cursor and settle on it; once it has rested for IDLE_MS, fly off on the idle loop
+      const want = idle ? idlePoint(t) : { ...mouse };
+      // keep the goal off the walls so the dragon never pins itself into an edge or corner
+      const mx = Math.min(VW * 0.12, 140 * scale), my = Math.min(VH * 0.14, 120 * scale);
+      want.x = Math.max(mx, Math.min(VW - mx, want.x));
+      want.y = Math.max(my, Math.min(VH - my, want.y));
+      const g = ease(dt, idle ? 900 : 120);
+      flight.gx += (want.x - flight.gx) * g;
+      flight.gy += (want.y - flight.gy) * g;
+      // steer toward the goal with a capped speed; gain and easing are near critically damped,
+      // so it slows into the cursor without overshooting
+      const maxV = (idle ? 0.16 : 1.1) * scale; // px per ms
+      let dvx = (flight.gx - head.x) * 0.004, dvy = (flight.gy - head.y) * 0.004;
+      const dv = Math.hypot(dvx, dvy);
+      if (dv > maxV) { dvx *= maxV / dv; dvy *= maxV / dv; }
+      const k = ease(dt, idle ? 400 : 80);
+      flight.vx += (dvx - flight.vx) * k;
+      flight.vy += (dvy - flight.vy) * k;
+      head.x += flight.vx * dt;
+      head.y += flight.vy * dt;
+      const speed = Math.hypot(flight.vx, flight.vy);
+      // only turn while actually flying, so a settling dragon keeps its heading instead of spinning in place
+      if (speed > 0.04) head.angle += wrapAngle(Math.atan2(flight.vy, flight.vx) - head.angle) * ease(dt, 140);
       head.width = segWidth(0);
       const maxBend = 0.25, sp = SEG_SPACING * scale;
       for (let i = 1; i < SEG_COUNT; i++) {
@@ -187,7 +232,7 @@ export function DragonReflow({ text }: { text: string }) {
         seg.y = prev.y - Math.sin(a) * sp;
         seg.width = segWidth(i);
       }
-      return true;
+      return speed > 0.005;
     }
 
     function spawnFire() {
@@ -223,7 +268,7 @@ export function DragonReflow({ text }: { text: string }) {
     function fireInfluence(x: number, y: number) {
       let dx = 0, dy = 0, total = 0;
       for (const p of fire) {
-        const ex = x - p.x, ey = y - p.y, d = Math.hypot(ex, ey);
+        const ex = x - (p.x - ox), ey = y - (p.y - oy), d = Math.hypot(ex, ey);
         if (d > 60 || d < 0.1) continue;
         const f = 1 - d / 60, w = f * f * p.life;
         dx += (ex / d) * w; dy += (ey / d) * w; total += w;
@@ -241,11 +286,11 @@ export function DragonReflow({ text }: { text: string }) {
       for (let y = pad; y + lineH <= H - pad; y += lineH) {
         const blocked: Interval[] = [];
         for (const s of segs) {
-          const iv = circleInterval(s.x, s.y, s.width / 2 + segPad, y, y + lineH);
+          const iv = circleInterval(s.x - ox, s.y - oy, s.width / 2 + segPad, y, y + lineH);
           if (iv) blocked.push(iv);
         }
         for (const p of fire) {
-          const iv = circleInterval(p.x, p.y, p.size / 2 + 6, y, y + lineH);
+          const iv = circleInterval(p.x - ox, p.y - oy, p.size / 2 + 6, y, y + lineH);
           if (iv) blocked.push(iv);
         }
         for (const f of fixed) if (y + lineH > f.y && y < f.y + f.h) blocked.push({ left: f.x, right: f.x + f.w });
@@ -272,7 +317,7 @@ export function DragonReflow({ text }: { text: string }) {
       ctx.textBaseline = "top";
       ctx.fillStyle = TEXT_COLOR;
       let fy0 = Infinity, fy1 = -Infinity;
-      for (const p of fire) { fy0 = Math.min(fy0, p.y - 70); fy1 = Math.max(fy1, p.y + 70); }
+      for (const p of fire) { fy0 = Math.min(fy0, p.y - oy - 70); fy1 = Math.max(fy1, p.y - oy + 70); }
       const halfAsc = fontSize * 0.43;
       for (const ln of lines) {
         const y = ln.y + (lineH - fontSize) / 2;
@@ -326,10 +371,11 @@ export function DragonReflow({ text }: { text: string }) {
 
     function drawDragon(t: number) {
       const ctx = dctx!, time = t / 1000;
+      // a slow, continuous hand-drawn sway instead of a fresh random shake every step
       const jit = (i: number) => [
-        (hash(seed + i * 37) - 0.5) * 1.5,
-        (hash(seed + i * 37 + 100) - 0.5) * 1.5,
-        (hash(seed + i * 37 + 200) - 0.5) * 0.04,
+        Math.sin(time * 2.1 + i * 0.9) * 0.6,
+        Math.cos(time * 1.7 + i * 1.3) * 0.6,
+        Math.sin(time * 1.3 + i * 0.7) * 0.015,
       ];
       if (imgs["wing-back"]) {
         const s = segs[WING_SEG], [jx, jy, jr] = jit(WING_SEG), { w, h } = dim("wing-back");
@@ -369,21 +415,25 @@ export function DragonReflow({ text }: { text: string }) {
       const moved = updateDragon(t);
       if ((holding || t < burstUntil) && t - lastSpawn > 60) { spawnFire(); lastSpawn = t; }
       const fired = updateFire(t);
-      if (moved || fired || textDirty) {
+      if (heroVisible && ((moved && t - lastLayout > LAYOUT_MS) || fired || textDirty || scrolled)) {
+        lastLayout = t;
+        const r = box!.getBoundingClientRect();
+        ox = r.left; oy = r.top;
         // the centre content fades/scales in, so keep its exclusion boxes current
         measureFixed();
         layoutText();
         drawText();
         textDirty = false;
+        scrolled = false;
       }
-      dctx!.clearRect(0, 0, W, H);
+      dctx!.clearRect(0, 0, VW, VH);
       drawFire();
       drawDragon(t);
       raf = requestAnimationFrame(frame);
     }
 
     function start() {
-      if (running || !visible || document.hidden) return;
+      if (running || document.hidden) return;
       running = true;
       raf = requestAnimationFrame(frame);
     }
@@ -392,37 +442,43 @@ export function DragonReflow({ text }: { text: string }) {
       cancelAnimationFrame(raf);
     }
 
-    const local = (e: PointerEvent) => {
-      const r = box.getBoundingClientRect();
-      return { x: e.clientX - r.left, y: e.clientY - r.top };
-    };
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
-      mouse = local(e);
+      mouse = { x: e.clientX, y: e.clientY };
       lastMove = performance.now();
     };
     const onDown = (e: PointerEvent) => {
-      if ((e.target as HTMLElement).closest("a, button")) return;
-      mouse = local(e);
+      if ((e.target as HTMLElement).closest(NO_FIRE)) return;
+      mouse = { x: e.clientX, y: e.clientY };
       lastMove = performance.now();
       // touch keeps page scrolling: a tap steers + gives a short burst instead of hold-to-breathe
       if (e.pointerType === "mouse") holding = true;
       else burstUntil = performance.now() + 450;
     };
     const onUp = () => { holding = false; };
-    const onLeave = () => { holding = false; };
+    const onScroll = () => { scrolled = true; };
+    // cursor left the window: start drifting now instead of hugging the edge it left from
+    const onOut = (e: PointerEvent) => {
+      if (e.relatedTarget) return;
+      lastMove = -1e9;
+      holding = false;
+    };
     const onVisibility = () => (document.hidden ? stop() : start());
 
     let resizeTimer: ReturnType<typeof setTimeout>;
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { measure(); resetDragon(); }, 120);
+    };
     const ro = new ResizeObserver(() => {
       const r = box.getBoundingClientRect();
       if (Math.abs(r.width - W) < 1 && Math.abs(r.height - H) < 1) return;
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => { measure(); resetDragon(); }, 120);
+      onResize();
     });
+    // the dragon flies everywhere; only the hero's text layout pauses off-screen
     const io = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      if (visible) start(); else stop();
+      heroVisible = entry.isIntersecting;
+      if (heroVisible) textDirty = true;
     });
 
     let cancelled = false;
@@ -445,11 +501,17 @@ export function DragonReflow({ text }: { text: string }) {
       resetDragon();
       // pre-roll the idle flight so the dragon is already mid-page on first paint
       const now = performance.now();
-      for (let k = 0; k < 60; k++) { lastStep = -1e9; updateDragon(now - (60 - k) * STEP_MS); }
-      box.addEventListener("pointermove", onMove);
-      box.addEventListener("pointerdown", onDown);
+      for (let k = 0; k < 240; k++) updateDragon(now - (240 - k) * 16);
+      flight.lastT = 0;
+      window.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerout", onOut);
+      window.addEventListener("pointerdown", onDown);
       window.addEventListener("pointerup", onUp);
-      box.addEventListener("pointerleave", onLeave);
+      window.addEventListener("pointercancel", onUp);
+      window.addEventListener("blur", onUp);
+      // capture on document: the site scrolls <body>, whose scroll events never reach window
+      document.addEventListener("scroll", onScroll, { passive: true, capture: true });
+      window.addEventListener("resize", onResize);
       document.addEventListener("visibilitychange", onVisibility);
       ro.observe(box);
       io.observe(box);
@@ -462,10 +524,14 @@ export function DragonReflow({ text }: { text: string }) {
       clearTimeout(resizeTimer);
       ro.disconnect();
       io.disconnect();
-      box.removeEventListener("pointermove", onMove);
-      box.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerout", onOut);
+      window.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerup", onUp);
-      box.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("blur", onUp);
+      document.removeEventListener("scroll", onScroll, { capture: true });
+      window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [text]);
@@ -473,7 +539,8 @@ export function DragonReflow({ text }: { text: string }) {
   return (
     <>
       <canvas ref={textRef} aria-hidden="true" className="absolute inset-0 w-full h-full pointer-events-none z-10" />
-      <canvas ref={dragonRef} aria-hidden="true" className="absolute inset-0 w-full h-full pointer-events-none z-40" />
+      {/* fixed to the viewport so the dragon can follow the cursor down the whole page; sits under the nav dock (z-50) */}
+      <canvas ref={dragonRef} aria-hidden="true" className="fixed inset-0 w-screen h-screen pointer-events-none z-40" />
     </>
   );
 }
