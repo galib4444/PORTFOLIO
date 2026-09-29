@@ -14,7 +14,7 @@ const WORKS: WorksWheelItem[] = projects.map((project) => ({
 }));
 
 /** Page scroll spent on each turn of the wheel (ring -> drum, then one per project). */
-const STEP_VH = 40;
+const STEP_VH = 25;
 
 /** Pinned while it turns: the section is tall, the wheel sticks to the viewport,
     and how far the page has scrolled through the section is the wheel's position. */
