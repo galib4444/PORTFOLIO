@@ -538,7 +538,7 @@ export function DragonReflow({ text }: { text: string }) {
 
   return (
     <>
-      <canvas ref={textRef} aria-hidden="true" className="absolute inset-0 w-full h-full pointer-events-none z-10" />
+      <canvas ref={textRef} aria-hidden="true" className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-(--hero-fade,1)" />
       {/* fixed to the viewport so the dragon can follow the cursor down the whole page; sits under the nav dock (z-50)
           and the works wheel panel (z-45), so it flies behind that */}
       <canvas ref={dragonRef} aria-hidden="true" className="fixed inset-0 w-screen h-screen pointer-events-none z-40" />
