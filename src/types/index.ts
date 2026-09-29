@@ -9,6 +9,8 @@ export interface Project {
   description: string;
   techStack: string[];
   imageUrl: string;
+  /* Looping TouchDesigner animation; imageUrl doubles as its poster */
+  videoUrl?: string;
   link?: string;
   github?: string;
   size: CardSize;

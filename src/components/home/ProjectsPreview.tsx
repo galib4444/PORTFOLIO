@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import Image from "next/image";
+import { ProjectMedia } from "@/components/projects/ProjectMedia";
 import { projects } from "@/data/projects";
 import Link from "next/link";
 import { staggerContainer, staggerItem } from "@/lib/animations";
@@ -62,24 +62,7 @@ export function ProjectsPreview() {
                     project.size === "square" ? "aspect-square" : "aspect-video"
                   }`}
                 >
-                  {project.imageUrl ? (
-                    <Image
-                      src={project.imageUrl}
-                      alt={project.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[var(--bg-tertiary)] to-[var(--bg-secondary)]">
-                      <span className="font-pixel text-3xl text-[var(--text-muted)] opacity-40">
-                        {project.title
-                          .split(/\s+/)
-                          .slice(0, 2)
-                          .map((w) => w[0])
-                          .join("")}
-                      </span>
-                    </div>
-                  )}
+                  <ProjectMedia project={project} className="object-cover group-hover:scale-105 transition-transform duration-300" />
                   <span className="absolute bottom-3 right-3 px-3 py-1 rounded-full bg-black/70 text-white text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity">
                     VIEW DETAILS →
                   </span>

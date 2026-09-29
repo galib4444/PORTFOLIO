@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, Github } from "lucide-react";
-import Image from "next/image";
+import { ProjectMedia } from "./ProjectMedia";
 import { Project } from "@/types";
 
 export function ProjectModal({
@@ -65,14 +65,9 @@ export function ProjectModal({
               <X size={18} />
             </button>
 
-            {project.imageUrl && (
+            {(project.videoUrl || project.imageUrl) && (
               <div className="relative aspect-video w-full overflow-hidden rounded-t-2xl">
-                <Image
-                  src={project.imageUrl}
-                  alt={project.title}
-                  fill
-                  className="object-cover"
-                />
+                <ProjectMedia project={project} />
               </div>
             )}
 

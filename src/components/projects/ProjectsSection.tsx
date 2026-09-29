@@ -7,7 +7,7 @@ import { Project, ProjectType } from "@/types";
 import { cn } from "@/lib/cn";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 import { ProjectModal } from "./ProjectModal";
-import Image from "next/image";
+import { ProjectMedia } from "@/components/projects/ProjectMedia";
 
 const allProjects = [...engineeringProjects, ...businessProjects, ...ventureProjects];
 
@@ -82,24 +82,7 @@ function ProjectCard({
             : "aspect-video"
         )}
       >
-        {project.imageUrl ? (
-          <Image
-            src={project.imageUrl}
-            alt={project.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[var(--bg-tertiary)] to-[var(--bg-secondary)]">
-            <span className="font-pixel text-3xl text-[var(--text-muted)] opacity-40">
-              {project.title
-                .split(/\s+/)
-                .slice(0, 2)
-                .map((w) => w[0])
-                .join("")}
-            </span>
-          </div>
-        )}
+        <ProjectMedia project={project} className="object-cover group-hover:scale-105 transition-transform duration-300" />
 
         {/* Featured badge */}
         {project.featured && (
