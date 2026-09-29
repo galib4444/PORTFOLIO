@@ -50,6 +50,7 @@ export interface WorksWheelProps extends Omit<
    decides whether they land inside the frame or run off it. */
 const CARD_H = 0.38; // front card height, of the stage
 const CARD_MAX_W = 0.34; // ... but never wider than this much of the stage
+const CARD_MAX_W_SM = 0.74; // ... below md, where no index shares the stage
 const CARD_RATIO = 1.45; // card width / height
 const STEP = 40; // degrees between cards on the drum
 const DRUM = 2.22; // drum radius, in card heights - and everything below likewise
@@ -113,6 +114,37 @@ function place(
   );
 }
 
+/** The project list - down the side from md up, in the overlay on phones.
+    `onPick` gets the turn that brings item i to the front (i + 1). */
+function IndexItems({
+  items,
+  active,
+  onPick,
+}: {
+  items: WorksWheelItem[];
+  active: number;
+  onPick: (next: number) => void;
+}) {
+  return items.map((item, i) => (
+    <li key={item.title}>
+      <button
+        type="button"
+        data-active={i === active}
+        title={item.title}
+        onClick={() => onPick(i + 1)}
+        className={cn(
+          // Long names truncate so the side index can't crowd the wheel; the
+          // full name is the front title and the tooltip.
+          "focus-visible:outline-foreground max-w-full cursor-pointer truncate transition-colors outline-none focus-visible:outline-1",
+          i === active && "text-foreground font-medium",
+        )}
+      >
+        {item.title}
+      </button>
+    </li>
+  ));
+}
+
 export function WorksWheel({
   items,
   label = "Works '26",
@@ -134,6 +166,16 @@ export function WorksWheel({
   const target = React.useRef(0);
   const [active, setActive] = React.useState(0);
   const [stage, setStage] = React.useState<Stage>({ w: 0, h: 0 });
+  // Width of the side index (md up), so the ring and the front card stay clear of it.
+  const indexRef = React.useRef<HTMLOListElement>(null);
+  const [indexW, setIndexW] = React.useState(0);
+  React.useEffect(() => {
+    const el = indexRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setIndexW(el.offsetWidth));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const name = label.replace(/\s+/g, " ");
   const count = items.length;
@@ -163,10 +205,22 @@ export function WorksWheel({
 
   const metrics = React.useMemo(() => {
     const { w, h } = stage;
-    const cardW = Math.min(h * CARD_H * CARD_RATIO, w * CARD_MAX_W);
+    const narrow = w < MD;
+    // Half-width free right of centre before the side index (right-[2.5%], plus a gap).
+    const free = narrow || !indexW ? Infinity : w / 2 - indexW - w * 0.025 - 24;
+    const cardW = Math.max(
+      0,
+      Math.min(h * CARD_H * CARD_RATIO, w * (narrow ? CARD_MAX_W_SM : CARD_MAX_W), free * 2),
+    );
     const cardH = cardW / CARD_RATIO;
     const drumR = cardH * DRUM;
-    const ringR = cardH * RING_R;
+    // The bigger phone card would push the ring off a narrow stage; keep it
+    // inside. From md up, the ring's outer edge (its cards reach roughly
+    // 2.6/count of the radius past it) stops short of the index.
+    const ringR = Math.max(
+      0,
+      Math.min(cardH * RING_R, (Math.min(w, h) / 2) * 0.78, free / (1 + 2.6 / Math.max(count, 1))),
+    );
     // Shrink the ring's cards until the circle reads as a closed loop rather
     // than beads on a wire, however many pieces the wheel is given.
     const ringScale = count
@@ -178,16 +232,19 @@ export function WorksWheel({
       ringR,
       ringScale,
       drumR,
-      bow: cardH * BOW,
+      // Less arc on a narrow stage, so the big card's neighbours stay on screen.
+      bow: cardH * BOW * (narrow ? 0.5 : 1),
       depth: cardH * LENS,
       label: cardH * LABEL,
       title: cardH * TITLE,
-      index: Math.max(INDEX_MIN, cardH * INDEX),
+      // Sized off the height-only card, not cardH: cardH now depends on the
+      // index's width, and the index's width on this.
+      index: Math.max(INDEX_MIN, h * CARD_H * INDEX),
       // Room for the front title: the gap left of the card from md up, or most
       // of the stage width below it, where the title sits under the card.
       gutter: w >= MD ? (w - cardW) / 2 - w * 0.05 - 16 : w * 0.9,
     };
-  }, [stage, count]);
+  }, [stage, count, indexW]);
 
   // Titles wrap, but a single long word can't - so size down to fit the longest.
   const longest = Math.max(
@@ -264,6 +321,24 @@ export function WorksWheel({
     },
     [last, controlled, onProgressChange],
   );
+
+  // Phone index: the list doesn't fit beside the wheel, so it opens over it.
+  const [indexOpen, setIndexOpen] = React.useState(false);
+  const pillRef = React.useRef<HTMLButtonElement>(null);
+  const overlayRef = React.useRef<HTMLDivElement>(null);
+  const openedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (indexOpen) {
+      openedRef.current = true;
+      overlayRef.current?.querySelector<HTMLButtonElement>("[data-active=true], li button")?.focus();
+      const onKey = (event: KeyboardEvent) => {
+        if (event.key === "Escape") setIndexOpen(false);
+      };
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }
+    if (openedRef.current) pillRef.current?.focus({ preventScroll: true });
+  }, [indexOpen]);
 
   const drag = React.useRef<number | null>(null);
   const settling = React.useRef(0);
@@ -430,24 +505,54 @@ export function WorksWheel({
 
       {/* text-secondary: this project's theme has no shadcn muted-foreground token */}
       <ol
-        className="text-secondary absolute top-[6%] right-[2.5%] text-right leading-[1.75] max-md:hidden"
+        ref={indexRef}
+        className="text-secondary absolute top-[6%] right-[2.5%] max-w-[22%] text-right leading-[1.75] max-md:hidden"
         style={{ fontSize: metrics.index }}
       >
-        {items.map((item, i) => (
-          <li key={item.title}>
+        <IndexItems items={items} active={active} onPick={to} />
+      </ol>
+
+      <button
+        ref={pillRef}
+        type="button"
+        onClick={() => setIndexOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={indexOpen}
+        className="bg-background/80 text-secondary focus-visible:outline-foreground absolute top-4 right-4 z-[110] rounded-full border border-current/20 px-3 py-1.5 font-mono text-xs tabular-nums backdrop-blur-sm outline-none focus-visible:outline-2 md:hidden"
+      >
+        Index · {String(active + 1).padStart(2, "0")}/{String(count).padStart(2, "0")}
+      </button>
+
+      {indexOpen ? (
+        <div
+          ref={overlayRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${name} index`}
+          className="bg-background/95 absolute inset-0 z-[120] flex flex-col overscroll-contain backdrop-blur-sm md:hidden"
+        >
+          <div className="flex items-center justify-between px-5 pt-5 pb-3 font-mono text-xs uppercase tracking-[0.12em]">
+            <span className="text-secondary">{count} projects</span>
             <button
               type="button"
-              onClick={() => to(i + 1)}
-              className={cn(
-                "focus-visible:outline-foreground cursor-pointer transition-colors outline-none focus-visible:outline-1",
-                i === active && "text-foreground font-medium",
-              )}
+              onClick={() => setIndexOpen(false)}
+              className="focus-visible:outline-foreground rounded-full border border-current/20 px-3 py-1.5 outline-none focus-visible:outline-2"
             >
-              {item.title}
+              Close
             </button>
-          </li>
-        ))}
-      </ol>
+          </div>
+          <ol className="text-secondary flex-1 overflow-y-auto overscroll-contain px-5 pb-6 text-[15px] leading-[2.3]">
+            <IndexItems
+              items={items}
+              active={active}
+              onPick={(next) => {
+                to(next);
+                setIndexOpen(false);
+              }}
+            />
+          </ol>
+        </div>
+      ) : null}
     </section>
   );
 }

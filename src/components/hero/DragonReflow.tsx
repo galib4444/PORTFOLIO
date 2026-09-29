@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import {
   layoutNextLine,
   prepareWithSegments,
@@ -95,9 +96,15 @@ function carve(base: Interval, blocked: Interval[]): Interval[] {
   return slots.filter((s) => s.right - s.left >= 28);
 }
 
+const noopSubscribe = () => () => {};
+
 export function DragonReflow({ text }: { text: string }) {
   const textRef = useRef<HTMLCanvasElement>(null);
   const dragonRef = useRef<HTMLCanvasElement>(null);
+  // The dragon canvas is portalled to <body> once mounted: inside the sticky,
+  // rounded hero panel, iOS WebKit clips even a position:fixed child to the panel.
+  // (false during SSR and hydration, true on the client after that)
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
 
   useEffect(() => {
     const tc = textRef.current;
@@ -468,7 +475,14 @@ export function DragonReflow({ text }: { text: string }) {
     let resizeTimer: ReturnType<typeof setTimeout>;
     const onResize = () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => { measure(); resetDragon(); }, 120);
+      resizeTimer = setTimeout(() => {
+        const prevW = VW;
+        measure();
+        // Only a width change (rotation, real window resize) restarts the flight.
+        // Height-only changes are the mobile address bar sliding in and out -
+        // keep the dragon where it is; its flight steers it back inside anyway.
+        if (Math.abs(VW - prevW) > 1) resetDragon();
+      }, 120);
     };
     const ro = new ResizeObserver(() => {
       const r = box.getBoundingClientRect();
@@ -534,14 +548,17 @@ export function DragonReflow({ text }: { text: string }) {
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [text]);
+  }, [text, mounted]);
 
   return (
     <>
       <canvas ref={textRef} aria-hidden="true" className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-(--hero-fade,1)" />
       {/* fixed to the viewport so the dragon can follow the cursor down the whole page; sits under the nav dock (z-50)
           and the works wheel panel (z-45), so it flies behind that */}
-      <canvas ref={dragonRef} aria-hidden="true" className="fixed inset-0 w-screen h-screen pointer-events-none z-40" />
+      {mounted && createPortal(
+        <canvas ref={dragonRef} aria-hidden="true" className="fixed inset-0 w-screen h-screen pointer-events-none z-40" />,
+        document.body,
+      )}
     </>
   );
 }

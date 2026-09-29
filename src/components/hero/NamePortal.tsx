@@ -17,8 +17,10 @@ const smooth = (a: number, b: number, n: number) => {
 
 /** Share of the scroll spent zooming; the rest holds inside the letter. */
 const ZOOM_END = 0.7;
-/** Scroll window over which the landing copy fades in, once inside. */
-const REVEAL: [number, number] = [0.72, 0.82];
+/** Scroll window over which the landing copy rises in from below, as in the
+    original portal, where it simply scrolled up into place. Linear, so it moves
+    at roughly the speed of the page. */
+const RISE: [number, number] = [0.55, 1];
 /** How far past the viewport's diagonal the letter's interior has to grow. */
 const OVERSHOOT = 1.35;
 
@@ -213,6 +215,7 @@ export function NamePortal({ sectionRef, panelRef, nameRef, lines }: NamePortalP
       panel.style.setProperty("--hero-fade", "1");
       panel.style.setProperty("--hero-hit", "auto");
       panel.style.setProperty("--hero-reveal", "0");
+      panel.style.setProperty("--hero-rise", "1");
       panel.style.setProperty("--hero-inside-hit", "none");
     };
 
@@ -258,9 +261,10 @@ export function NamePortal({ sectionRef, panelRef, nameRef, lines }: NamePortalP
       // ...then they turn into windows onto a scene that holds still behind them
       // and only drifts in slowly - the parallax is what makes the dive read as depth.
       landing.style.transform = `scale(${1 + 0.16 * smooth(0, ZOOM_END * 1.05, p)})`;
-      const reveal = smooth(REVEAL[0], REVEAL[1], p);
-      panel.style.setProperty("--hero-reveal", String(reveal));
-      panel.style.setProperty("--hero-inside-hit", reveal > 0.9 ? "auto" : "none");
+      const rise = clamp((p - RISE[0]) / (RISE[1] - RISE[0]));
+      panel.style.setProperty("--hero-rise", String(1 - rise));
+      panel.style.setProperty("--hero-reveal", String(smooth(0, 0.35, rise)));
+      panel.style.setProperty("--hero-inside-hit", rise > 0.85 ? "auto" : "none");
     };
 
     const schedule = () => { if (!raf) raf = requestAnimationFrame(paint); };

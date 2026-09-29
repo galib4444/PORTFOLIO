@@ -64,7 +64,7 @@ export function HeroSection() {
         {/* Inside the letter: what the zoom lands on (NamePortal drives --hero-reveal) */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 z-30 flex flex-col justify-center gap-7 px-7 sm:px-[8vw] lg:px-[120px] py-[12vh] text-white opacity-(--hero-reveal,0) pointer-events-none"
+          className="absolute inset-0 z-30 flex flex-col justify-center gap-7 px-7 sm:px-[8vw] lg:px-[120px] py-[12vh] text-white opacity-(--hero-reveal,0) pointer-events-none translate-y-[calc(var(--hero-rise,1)*100%)]"
         >
           <p className="font-mono text-xs md:text-[13px] tracking-[0.3em] uppercase opacity-85">
             Galib Muktasin
