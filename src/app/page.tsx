@@ -2,7 +2,7 @@ import { NavigationDock } from "@/components/navigation/NavigationDock";
 import { HeroSection } from "@/components/hero/HeroSection";
 import { WorksWheelSection } from "@/components/home/WorksWheelSection";
 import { ServicesSection } from "@/components/services/ServicesSection";
-import { ExperiencePreview } from "@/components/home/ExperiencePreview";
+import { ExperienceTimeline } from "@/components/home/ExperienceTimeline";
 import { ContactSection } from "@/components/contact/ContactSection";
 
 export default function Home() {
@@ -13,7 +13,7 @@ export default function Home() {
         <HeroSection />
         <ServicesSection />
         <WorksWheelSection />
-        <ExperiencePreview />
+        <ExperienceTimeline />
         <ContactSection />
       </main>
     </>
