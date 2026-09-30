@@ -154,6 +154,8 @@ export function DragonReflow({ text }: { text: string }) {
       tctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       dctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       scale = Math.max(0.55, Math.min(1.15, VW / 1250));
+      // Phones: 60% of that - at the 0.55 floor it filled too much of a narrow screen.
+      if (VW < 768) scale *= 0.6;
       pad = W < 640 ? 22 : 44;
       cornerR = parseFloat(getComputedStyle(box!).borderTopLeftRadius) || 0;
       fontSize = W < 640 ? 11 : W < 1100 ? 12 : 13;
