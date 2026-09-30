@@ -67,14 +67,16 @@ function ProjectCard({
       variants={staggerItem}
       layout
       className={cn(
-        "group relative text-left w-full bg-[var(--bg-secondary)] rounded-2xl overflow-hidden border border-[var(--glass-border)] hover:border-[var(--accent-orange)] transition-all duration-300",
+        // flex column: a <button> centres its content vertically, which left a
+        // gap above or below whenever the grid stretched a card taller than it
+        "group relative flex flex-col text-left w-full bg-[var(--bg-secondary)] rounded-2xl overflow-hidden border border-[var(--glass-border)] hover:border-[var(--accent-orange)] transition-all duration-300",
         sizeClasses[project.size]
       )}
     >
-      {/* Image */}
+      {/* Image - its aspect ratio is the minimum; it grows into any extra height */}
       <div
         className={cn(
-          "relative",
+          "relative w-full flex-1",
           project.size === "tall"
             ? "aspect-[4/3] md:aspect-[3/4]"
             : project.size === "square"
@@ -98,7 +100,7 @@ function ProjectCard({
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="p-6 shrink-0">
         <span className="text-xs font-mono text-[var(--accent-orange)] uppercase tracking-wider">
           {project.category}
         </span>
