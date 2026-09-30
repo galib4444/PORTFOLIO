@@ -13,8 +13,10 @@ const WORKS: WorksWheelItem[] = projects.map((project) => ({
   href: `/projects?project=${project.id}`,
 }));
 
-/** Page scroll spent on each turn of the wheel (ring -> drum, then one per project). */
-const STEP_VH = 32;
+/* Page scroll spent on each turn of the wheel (ring -> drum, then one per
+   project) is --ww-step on the section: 32vh, and 42vh on phones, where a thumb
+   flick covers far more screen than a wheel notch and the same distance felt
+   rushed. Literal classes, so Tailwind can see them. */
 
 /** Pinned while it turns: the section is tall, the wheel sticks to the viewport,
     and how far the page has scrolled through the section is the wheel's position. */
@@ -61,8 +63,8 @@ export function WorksWheelSection() {
     <section
       ref={ref}
       id="selected-work"
-      className="relative bg-[var(--bg-primary)]"
-      style={{ height: `calc(100vh + ${WORKS.length * STEP_VH}vh)` }}
+      className="relative bg-[var(--bg-primary)] [--ww-step:32vh] max-md:[--ww-step:42vh]"
+      style={{ height: `calc(100vh + ${WORKS.length} * var(--ww-step))` }}
     >
       {/* z-45: above the hero dragon's fixed canvas (z-40), so it flies under the
           panel; below the nav dock (z-50). Set on the sticky wrapper, since sticky

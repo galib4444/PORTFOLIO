@@ -497,8 +497,20 @@ export function WorksWheel({
       </div>
       <div
         ref={titleRef}
-        className="font-pixel pointer-events-none absolute bottom-16 left-1/2 max-w-[90%] -translate-x-1/2 text-center leading-none tracking-tight text-balance opacity-0 md:top-1/2 md:bottom-auto md:left-[5%] md:max-w-[24%] md:translate-x-0 md:-translate-y-1/2 md:text-left"
-        style={{ fontSize: titleSize }}
+        className={cn(
+          // Phones: a quiet mono caption tucked just under the front card, in the
+          // gap before the next card - not a display heading at the bottom,
+          // where it ran into that card.
+          "pointer-events-none absolute top-[calc(50%+var(--ww-under))] left-1/2 max-w-[90%] -translate-x-1/2 text-center font-mono text-sm leading-snug text-balance opacity-0",
+          // md up: the display title in the gutter left of the card.
+          "md:font-pixel md:top-1/2 md:left-[5%] md:max-w-[24%] md:translate-x-0 md:-translate-y-1/2 md:text-left md:text-(length:--ww-title) md:leading-none md:tracking-tight",
+        )}
+        style={
+          {
+            "--ww-under": `${metrics.cardH / 2 + 14}px`,
+            "--ww-title": `${titleSize}px`,
+          } as React.CSSProperties
+        }
       >
         {items[active]?.title}
       </div>
