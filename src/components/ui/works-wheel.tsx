@@ -322,24 +322,6 @@ export function WorksWheel({
     [last, controlled, onProgressChange],
   );
 
-  // Phone index: the list doesn't fit beside the wheel, so it opens over it.
-  const [indexOpen, setIndexOpen] = React.useState(false);
-  const pillRef = React.useRef<HTMLButtonElement>(null);
-  const overlayRef = React.useRef<HTMLDivElement>(null);
-  const openedRef = React.useRef(false);
-  React.useEffect(() => {
-    if (indexOpen) {
-      openedRef.current = true;
-      overlayRef.current?.querySelector<HTMLButtonElement>("[data-active=true], li button")?.focus();
-      const onKey = (event: KeyboardEvent) => {
-        if (event.key === "Escape") setIndexOpen(false);
-      };
-      window.addEventListener("keydown", onKey);
-      return () => window.removeEventListener("keydown", onKey);
-    }
-    if (openedRef.current) pillRef.current?.focus({ preventScroll: true });
-  }, [indexOpen]);
-
   const drag = React.useRef<number | null>(null);
   const settling = React.useRef(0);
 
@@ -498,16 +480,14 @@ export function WorksWheel({
       <div
         ref={titleRef}
         className={cn(
-          // Phones: a quiet mono caption tucked just under the front card, in the
-          // gap before the next card - not a display heading at the bottom,
-          // where it ran into that card.
-          "pointer-events-none absolute top-[calc(50%+var(--ww-under))] left-1/2 max-w-[90%] -translate-x-1/2 text-center font-mono text-sm leading-snug text-balance opacity-0",
+          // Phones: a quiet mono caption at the top of the wheel, across from the
+          // count - clear of every card, not a display heading.
+          "pointer-events-none absolute top-5 left-5 right-20 font-mono text-sm leading-snug text-balance opacity-0",
           // md up: the display title in the gutter left of the card.
-          "md:font-pixel md:top-1/2 md:left-[5%] md:max-w-[24%] md:translate-x-0 md:-translate-y-1/2 md:text-left md:text-(length:--ww-title) md:leading-none md:tracking-tight",
+          "md:font-pixel md:top-1/2 md:right-auto md:left-[5%] md:max-w-[24%] md:translate-x-0 md:-translate-y-1/2 md:text-left md:text-(length:--ww-title) md:leading-none md:tracking-tight",
         )}
         style={
           {
-            "--ww-under": `${metrics.cardH / 2 + 14}px`,
             "--ww-title": `${titleSize}px`,
           } as React.CSSProperties
         }
@@ -524,47 +504,13 @@ export function WorksWheel({
         <IndexItems items={items} active={active} onPick={to} />
       </ol>
 
-      <button
-        ref={pillRef}
-        type="button"
-        onClick={() => setIndexOpen(true)}
-        aria-haspopup="dialog"
-        aria-expanded={indexOpen}
-        className="bg-background/80 text-secondary focus-visible:outline-foreground absolute top-4 right-4 z-[110] rounded-full border border-current/20 px-3 py-1.5 font-mono text-xs tabular-nums backdrop-blur-sm outline-none focus-visible:outline-2 md:hidden"
+      {/* Phones: just the count - the list itself doesn't fit beside the wheel. */}
+      <span
+        aria-hidden="true"
+        className="text-secondary absolute top-5 right-5 font-mono text-xs tabular-nums md:hidden"
       >
-        Index · {String(active + 1).padStart(2, "0")}/{String(count).padStart(2, "0")}
-      </button>
-
-      {indexOpen ? (
-        <div
-          ref={overlayRef}
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${name} index`}
-          className="bg-background/95 absolute inset-0 z-[120] flex flex-col overscroll-contain backdrop-blur-sm md:hidden"
-        >
-          <div className="flex items-center justify-between px-5 pt-5 pb-3 font-mono text-xs uppercase tracking-[0.12em]">
-            <span className="text-secondary">{count} projects</span>
-            <button
-              type="button"
-              onClick={() => setIndexOpen(false)}
-              className="focus-visible:outline-foreground rounded-full border border-current/20 px-3 py-1.5 outline-none focus-visible:outline-2"
-            >
-              Close
-            </button>
-          </div>
-          <ol className="text-secondary flex-1 overflow-y-auto overscroll-contain px-5 pb-6 text-[15px] leading-[2.3]">
-            <IndexItems
-              items={items}
-              active={active}
-              onPick={(next) => {
-                to(next);
-                setIndexOpen(false);
-              }}
-            />
-          </ol>
-        </div>
-      ) : null}
+        {String(active + 1).padStart(2, "0")}/{String(count).padStart(2, "0")}
+      </span>
     </section>
   );
 }
