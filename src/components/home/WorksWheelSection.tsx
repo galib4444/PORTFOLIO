@@ -14,7 +14,7 @@ const WORKS: WorksWheelItem[] = projects.map((project) => ({
 }));
 
 /* Page scroll spent on each turn of the wheel (ring -> drum, then one per
-   project) is --ww-step on the section: 32vh, and 42vh on phones, where a thumb
+   project) is --ww-step on the section: 35vh, and 42vh on phones, where a thumb
    flick covers far more screen than a wheel notch and the same distance felt
    rushed. Literal classes, so Tailwind can see them. */
 
@@ -63,7 +63,7 @@ export function WorksWheelSection() {
     <section
       ref={ref}
       id="selected-work"
-      className="relative bg-[var(--bg-primary)] [--ww-step:32vh] max-md:[--ww-step:42vh]"
+      className="relative bg-[var(--bg-primary)] [--ww-step:35vh] max-md:[--ww-step:42vh]"
       style={{ height: `calc(100vh + ${WORKS.length} * var(--ww-step))` }}
     >
       {/* z-45: above the hero dragon's fixed canvas (z-40), so it flies under the
